@@ -1,0 +1,1216 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+
+    <title>The Story</title>
+    <meta name="description" content="Collaborative storytelling experiment">
+
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="expires" content="0">
+
+    <!-- use this to control the scale of the page on mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=0.7, maximum-scale=0.7" />
+
+    <!-- FB Meta Tags -->
+    <meta property="og:url" content="https://the-story.ggerganov.com">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="The Story">
+    <meta property="og:description" content="Collaborative storytelling experiment">
+    <meta property="og:image" content="https://the-story.ggerganov.com/android-chrome-512x512.png">
+
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:title" content="The Story" />
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:description" content="Collaborative storytelling experiment" />
+    <meta name="twitter:image" content="https://the-story.ggerganov.com/android-chrome-512x512.png" />
+    <meta property="twitter:domain" content="ggerganov.com">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        #main {
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .main-header {
+            max-width: 800px;
+            min-width: 500px;
+            padding-top: 10px;
+            padding-bottom: 20px;
+            text-align: center;
+        }
+
+        .main-header-left {
+            padding-top: 8px;
+            float: left;
+            font-size: 24px;
+            color: #000000;
+        }
+
+        .main-header-right {
+            float: right;
+            font-size: 24px;
+        }
+
+        .main-header-middle {
+            overflow: hidden;
+            font-size: 24px;
+            font-weight: bold;
+            color: #000000;
+        }
+
+        .main-header-status {
+            font-size: 16px;
+        }
+
+        .story {
+            height: 100%;
+            max-width: 800px;
+            min-width: 500px;
+            float: left;
+            overflow-y: hidden;
+        }
+
+        .slot {
+            min-width: 1.5em;
+            height: 1.25em;
+            display: inline-block;
+            vertical-align: top;
+            text-align: center;
+            font-family: monospace;
+            font-size: 20px;
+            cursor: pointer;
+            margin: 1px;
+            padding: 2px;
+            color: #000;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            background-color: #ffffff;
+            border: 1px solid #ffffff;
+            /* background-color: #f2f2f2; */
+            /* border: 1px solid #ccc; */
+        }
+
+        .slot-empty {
+            border: 1px solid #ccc;
+        }
+
+        .slot-selected {
+            border: 1px solid #ccc;
+            background-color: #ccffcc !important;
+        }
+
+        .slots-justify-left {
+        }
+
+        .slots-justify-center {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .slots-scrollable {
+            height: 100%;
+            width: 100%;
+            float: left;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+
+        .slot-info {
+            display: none;
+            height: 100%;
+            max-width: 800px;
+            min-width: 500px;
+            overflow-y: hidden;
+            border: 2px solid #a9a9a9;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 2px 6px 0 rgba(0,0,0,0.19);
+            margin-top: 0.6em;
+        }
+
+        .slot-info-content {
+            display: inline-block;
+            height: 100%;
+            max-width: 100%;
+            min-width: 500px;
+            overflow-x: hidden;
+            background-color: #fefefe;
+        }
+
+        .slot-info-input {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: 2px solid #ccc;
+            -webkit-transition: 0.5s;
+            transition: 0.5s;
+            outline: none;
+            font-family: monospace;
+            font-size: 20px;
+
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slot-info-input:focus {
+            border: 2px solid #555;
+        }
+
+        .slot-info-status {
+            font-size: 16px;
+            text-align: center;
+            font-family: monospace;
+        }
+
+        .navigation {
+            max-width: 800px;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 0.6em;
+            margin-bottom: 1.0em;
+        }
+
+        .navigation-buttons {
+            width: 100%;
+            height: 10%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            bottom: 0;
+
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .navigation-buttons .main {
+            width: 1.8em;
+            height: 1.8em;
+            background-color: #d3d3d3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0.1em;
+            border-radius: 0.5em;
+            border: 2px solid #a9a9a9;
+        }
+
+        .navigation-buttons .main:hover {
+            background-color: lightgreen;
+        }
+
+        .navigation-buttons .main:active {
+            background-color: #99cc99;
+        }
+
+        .navigation-buttons .submit {
+            width: 1.5em;
+            height: 1.5em;
+            background-color: #d3d3d3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.75em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0.1em;
+            border-radius: 0.5em;
+            border: 2px solid #a9a9a9;
+        }
+
+        .navigation-buttons .submit:hover {
+            background-color: lightgreen;
+        }
+
+        .navigation-buttons .submit:active {
+            background-color: #99cc99;
+        }
+
+        .navigation-buttons .text-input {
+            height: 100%;
+            background-color: #d3d3d3;
+            border-left: 2px solid #d3d3d3;
+        }
+
+        .button-slot-info-top-submission {
+            position: relative;
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            font-family: monospace;
+            font-size: 20px;
+            color: #000000;
+            padding: 4px;
+            padding-left: 8px;
+            padding-right: 8px;
+            margin: 4px;
+            text-align: center;
+            -webkit-transition-duration: 0.4s; /* Safari */
+            transition-duration: 0.4s;
+            text-decoration: none;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .button-slot-info-top-submission:after {
+            content: "";
+            background: #90EE90;
+            display: block;
+            position: absolute;
+            padding-top: 300%;
+            padding-left: 350%;
+            margin-left: -20px!important;
+            margin-top: -120%;
+            opacity: 0;
+            transition: all 0.8s
+        }
+
+        .button-slot-info-top-submission:active:after {
+            padding: 0;
+            margin: 0;
+            opacity: 1;
+            transition: 0s
+        }
+
+        .slot-info-slot-info-top-submission-bar {
+            display: inline-block;
+            background-color: lightgreen;
+            border: 1px solid green;
+            text-align: left;
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 4px;
+            margin-left: 20px;
+        }
+
+        .button-slot-info-submit {
+            margin-left: 8px;
+            color: #000000;
+            display: block;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        /*********************
+         * Modals
+         *********************/
+
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            padding-top: 0px; /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: hidden; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            /*bottom: 100px;*/
+        }
+
+        /* Modal Content */
+        .modal-content {
+            max-width: 800px;
+            min-width: 500px;
+            max-height: 75%;
+            overflow: auto; /* Enable scroll if needed */
+            position: relative;
+            background-color: #fefefe;
+            margin: auto;
+            padding: 0;
+            border: 1px solid #888;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+            -webkit-animation-name: animatefadein;
+            -webkit-animation-duration: 0.25s;
+            animation-name: animatefadein;
+            animation-duration: 0.25s
+        }
+
+        /* Add Animation */
+        @-webkit-keyframes animatetop {
+            from {top:-300px; opacity:0} 
+            to {top:0; opacity:1}
+        }
+
+        @keyframes animatetop {
+            from {top:-300px; opacity:0}
+            to {top:0; opacity:1}
+        }
+
+        @-webkit-keyframes animatefadein {
+            from {opacity:0} 
+            to {opacity:1}
+        }
+
+        @keyframes animatefadein {
+            from {opacity:0}
+            to {opacity:1}
+        }
+
+        /* The Close Button */
+        .close {
+            color: gray;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-header {
+            padding: 2px 16px;
+            padding-top: 24px;
+            padding-bottom: 16px;
+            background-color: #ffffff;
+            color: #000000;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .modal-body {
+            position: relative;
+            padding: 2px 16px;
+        }
+
+        .modal-body li {
+            margin: 10px 0;
+        }
+
+        .modal-footer {
+            padding: 2px 16px;
+            padding-top: 24px;
+            padding-bottom: 16px;
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        /*********************
+
+    </style>
+</head>
+<body onLoad="init()">
+    <div id="main">
+
+        <div class="main-header">
+            <div class="main-header-left">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" onClick="showHelp()">
+                    <path fill="var(--color-tone-1)" d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"></path>
+                </svg>
+            </div>
+            <div class="main-header-right">
+            </div>
+            <div class="main-header-middle">
+                The Story
+                <div class="main-header-status" id="status-global" title="submissions / votes / needed">
+                </div>
+            </div>
+        </div>
+
+        <!-- Help modal -->
+        <div id="modalHelp" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span id="modalHelpClose" class="close">&times;</span>
+                    <b>What is this?</b>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        <b>The Story</b> is a collaborative storytelling experiment.
+                    </p>
+                    <p>
+                        <ul>
+                            <li>
+                                Submit words to be used in the story
+                            </li>
+                            <li>
+                                Only lowercase letters are allowed
+                            </li>
+                            <li>
+                                The most voted word in each slot will be used
+                            </li>
+                            <li>
+                                Only one vote per slot per day per user is allowed
+                            </li>
+                            <li>
+                                New slots are unlocked based on the number of votes
+                            </li>
+                        </ul>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings modal -->
+        <div id="modalSettings" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span id="modalSettingsClose" class="close">&times;</span>
+                    <b>Settings</b>
+                </div>
+                <div class="modal-body">
+                    <table width=100%>
+                        <tr>
+                            <td>
+                                User ID
+                            </td>
+                            <td id="settings-user-id">
+                            </td>
+                        </tr>
+                        <tr style="display: none">
+                            <td>
+                                Submitted by you
+                            </td>
+                            <td id="settings-submitted">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Slots
+                            </td>
+                            <td id="settings-slots">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Total submissions
+                            </td>
+                            <td id="settings-submitted-total">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Total votes
+                            </td>
+                            <td id="settings-votes-total">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Votes needed for new slot
+                            </td>
+                            <td id="settings-votes-needed">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Last update
+                            </td>
+                            <td id="settings-last-update">
+                            </td>
+                        </tr>
+                    </table>
+                    <div id="button-justify" class="main" onClick="changeJustification()" style="display: none;">
+                        <i class="fa fa-align-justify"></i>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="https://github.com/ggerganov/the-story" target="_blank"> <i class="fa-brands fa-github"></i> View on Github</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="story" class="story">
+            <div id="slots" class="slots slots-scrollable">
+            </div>
+        </div>
+
+        <!-- Slot Info -->
+        <div id="modalSlotInfo" class="slot-info">
+            <div class="slot-info-content">
+                <div class="modal-header">
+                </div>
+                <div class="modal-body">
+                    <table>
+                        <tr>
+                            <td width=95%>
+                                <input type="text" id="slot-info-input" class="slot-info-input" onkeydown="return /[a-z]/.test(event.key)" placeholder="enter a word" autocomplete="off">
+                            </td>
+                            <td>
+                                <div class="navigation-buttons">
+                                    <div class="submit" onClick="submitVote()">
+                                        <i class="far fa-arrow-alt-circle-up"></i>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="slot-info-status" id="slot-info-status" title="submissions / votes / submitted">
+                    </div>
+
+                    <table id="slotInfoTopWords"></table>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <div class="navigation-buttons">
+                <div class="main" onClick="gotoLeastVoted()">
+                    <i class="fa fa-scale-unbalanced"></i>
+                </div>
+                <div class="main" onClick="gotoFirst()">
+                    <i class="fa fa-backward"></i>
+                </div>
+                <div class="main" id="nav-goto-previous">
+                    <i class="fa fa-caret-left"></i>
+                </div>
+                <div class="main" onClick="toggleSlotInfo()">
+                    <i class="fa fa-circle-dot"></i>
+                </div>
+                <div class="main" id="nav-goto-next">
+                    <i class="fa fa-caret-right"></i>
+                </div>
+                <div class="main" onClick="gotoLast()">
+                    <i class="fa fa-forward"></i>
+                </div>
+                <div class="main" onClick="showSettings()">
+                    <i class="fa fa-cog"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Javascript -->
+    <script>
+        // main data object with all available stats about the story
+        var stats = {};
+
+        var lastSlot = -1;    // the last selected slot
+        var currentSlot = -1; // currently selected slot
+        var submissions = {};
+
+        var isFirstLoad = true;
+
+        var onMouseDown = null;
+
+        var userId = 0;
+        var nSubmitted = 0;
+
+        //
+        // Settings
+        //
+
+        // enum for text justification with 2 options: left and center
+        const ETextJustification = {
+            LEFT: 0,
+            CENTER: 1
+        };
+
+        // the text justification
+        var textJustification = null;
+
+        //
+        // Modals
+        //
+
+        // modal: help
+
+        var modalHelp = document.getElementById("modalHelp");
+
+        function showHelp() {
+            closeModals()
+
+            modalHelp.style.display = "flex";
+        }
+
+        document.getElementById("modalHelpClose").onclick = function() {
+            modalHelp.style.display = "none";
+        }
+
+        // modal: settings
+
+        var modalSettings = document.getElementById("modalSettings");
+
+        function showSettings() {
+            closeModals()
+
+            modalSettings.style.display = "flex";
+        }
+
+        document.getElementById("modalSettingsClose").onclick = function() {
+            modalSettings.style.display = "none";
+
+        }
+
+        // modal: slot info
+
+        var modalSlotInfo = document.getElementById("modalSlotInfo");
+
+        function toggleSlotInfo() {
+            if (modalSlotInfo.style.display != "block") {
+                modalSlotInfo.style.display  = "block";
+            } else {
+                closeModals()
+            }
+
+            updateSlotInfo();
+
+            selectSlot(currentSlot);
+
+            //plotHistogram("histogramSample", dataY, 0, 100, "white", "#88cc88", "black", "lightgray");
+        }
+
+        function closeModals(event) {
+            if (event == undefined || event.target == modalHelp) {
+                modalHelp.style.display = "none";
+            }
+
+            if (event == undefined || event.target == modalSettings) {
+                modalSettings.style.display = "none";
+            }
+
+            if (event == undefined || event.target == modalSlotInfo) {
+                modalSlotInfo.style.display = "none";
+            }
+
+            if (onMouseDown) {
+                clearInterval(onMouseDown);
+            }
+        }
+
+        //
+        // Navigation
+        //
+
+        function selectSlot(id) {
+            lastSlot = currentSlot;
+
+            // parse "id" to an integer
+            currentSlot = parseInt(id);
+
+            updateStoryDisplay();
+            updateSlotInfo();
+
+            // set slot input from "submissions" if available
+            if (submissions[currentSlot] != undefined) {
+                setSlotInfoInput(submissions[currentSlot].input);
+                document.getElementById('slot-info-input').style.backgroundColor = "#ccffcc";
+            } else {
+                setSlotInfoInput("");
+                document.getElementById('slot-info-input').style.backgroundColor = "";
+            }
+
+            if (!$("#slots").is(':animated')) {
+                $("#slots").animate(
+                    { scrollTop: $("#slots").scrollTop() + $("#slot" + currentSlot).position().top - 0.75*$("#slots").height() },
+                    Math.min(1000, Math.abs(currentSlot - lastSlot)/20*100), function() {
+                    });
+            }
+        }
+
+        function gotoLeastVoted() {
+            // find the slot with the least votes
+            var slots = stats.slots;
+            var minVotes = -1;
+            var minVotesSlot = -1;
+            for (var i = 0; i < slots.length; i++) {
+                if (submissions[i] != undefined) {
+                    continue;
+                }
+                if (slots[i].votes < minVotes || minVotes == -1) {
+                    minVotes = slots[i].votes;
+                    minVotesSlot = i;
+                }
+            }
+
+            if (minVotesSlot != -1) {
+                selectSlot(minVotesSlot);
+            }
+        }
+
+        function gotoFirst() {
+            selectSlot(0);
+        }
+
+        function gotoPrevious() {
+            if (currentSlot > 0) {
+                selectSlot(currentSlot - 1);
+            }
+        }
+
+        function changeJustification(to) {
+            var slots = document.getElementById("slots");
+            var button = document.getElementById("button-justify");
+
+            if (textJustification == ETextJustification.LEFT || to == ETextJustification.CENTER) {
+                textJustification = ETextJustification.CENTER;
+                slots.classList.remove("slots-justify-left");
+                slots.classList.add("slots-justify-center");
+                button.innerHTML = '<i class="fa fa-align-left"></i>';
+            } else if (textJustification == ETextJustification.CENTER || to == ETextJustification.LEFT) {
+                textJustification = ETextJustification.LEFT;
+                slots.classList.remove("slots-justify-center");
+                slots.classList.add("slots-justify-left");
+                button.innerHTML = '<i class="fa fa-align-center"></i>';
+            }
+
+            updateStoryDisplay();
+
+            // store the text justification in local storage
+            localStorage.setItem("textJustification", textJustification);
+        }
+
+        function gotoNext() {
+            if (currentSlot < stats.slots.length - 1) {
+                selectSlot(currentSlot + 1);
+            }
+        }
+
+        function gotoLast() {
+            selectSlot(stats.slots.length - 1);
+        }
+
+        //
+        // State
+        //
+
+        function getTimestamp() {
+            return new Date().getTime();
+        }
+
+        function getDaysSinceEpoch(t = null) {
+            if (t == null) {
+                return Math.floor(getTimestamp() / (1000 * 60 * 60 * 24));
+            } else {
+                return Math.floor(t / (1000 * 60 * 60 * 24));
+            }
+        }
+
+        function generateUserId() {
+            return Math.floor(Math.random() * 65536);
+        }
+
+        function updateStoryContents() {
+            var slots = document.getElementById("slots");
+
+            slots.innerHTML = "";
+
+            for (var i = 0; i < stats.slots.length; i++) {
+                var slot = document.createElement("div");
+                slot.className = "slot";
+                slot.id = "slot" + i;
+
+                if (stats.slots[i].top.length == 0) {
+                    slot.innerHTML = " ";
+                    slot.classList.add("slot-empty");
+                } else {
+                    slot.innerHTML = stats.slots[i].top[0].word;
+                }
+
+                // when the slot element is clicked, the top section is updated to show the information for the selected slot
+                slot.onclick = function() {
+                    // update the top section to show the information for the selected slot
+                    var slotId = this.id.substring(4);
+                    selectSlot(slotId);
+                    // show slot info modal if it is not already open
+                    if (modalSlotInfo.style.display != "block") {
+                        toggleSlotInfo();
+                    }
+                };
+
+                slots.appendChild(slot);
+            }
+
+            var status = document.getElementById("status-global");
+            status.innerHTML = "";
+            status.innerHTML += stats.submissions + " / " + stats.votes + " / " + (stats.next - stats.votes);
+
+            updateStoryDisplay();
+        }
+
+        // fetch a JSON file called "stats.json" from the server
+        function update() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    stats = JSON.parse(this.responseText);
+
+                    updateStoryContents();
+                    updateSlotInfo();
+                    updateSettings();
+
+                    if (isFirstLoad) {
+                        // smooth scroll the slots element to the bottom using jQuery in async call
+                        // after the animation finishes, select the last slot
+                        setTimeout(function() {
+                            gotoLast();
+                            toggleSlotInfo();
+                        }, 500);
+
+                        isFirstLoad = false;
+                    }
+                }
+            };
+            xhttp.open("GET", "stats.json?nocache=" + (new Date()).getTime(), true);
+            xhttp.send();
+        }
+
+        function setSlotInfoInput(input) {
+            document.getElementById('slot-info-input').value = input;
+        }
+
+        function getSlotInfoInput() {
+            return document.getElementById('slot-info-input').value;
+        }
+
+        function onSubmitVote(success) {
+            var el = document.getElementById('slot-info-input');
+            if (success) {
+                ++nSubmitted;
+                localStorage.setItem("nSubmitted", nSubmitted);
+
+                el.style.backgroundColor = "rgba(0, 255, 0, 1.0)";
+                setTimeout(function() { el.style.backgroundColor = "#ccffcc"; }, 200);
+                setTimeout(function() { update(); }, 1000);
+            } else {
+                el.style.backgroundColor = "rgba(255, 0, 0, 0.5)";
+                setTimeout(function() { el.style.backgroundColor = ""; }, 200);
+            }
+        }
+
+        function submitVote() {
+            var input = getSlotInfoInput();
+
+            if (input.length > 0) {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4) {
+                        // parse the response
+                        var response = {};
+                        try {
+                            var response = JSON.parse(this.responseText);
+                            console.log(this.responseText);
+                        } catch (e) {
+                            console.log(e);
+                            response.error = -1;
+                        }
+
+                        if (this.status == 200 && response.error == 0) {
+                            console.log("Successful vote: " + response.message);
+                            var submission = {
+                                "input": input,
+                                "timestamp": getTimestamp()
+                            };
+                            submissions[currentSlot] = submission;
+                            localStorage.setItem("submissions", JSON.stringify(submissions));
+                            document.getElementById('slot-info-input').blur();
+                            onSubmitVote(true);
+                        } else {
+                            if (this.status == 200) {
+                                console.log("Error submitting vote: " + response.message);
+                            } else {
+                                console.log("Error submitting vote: status = " + this.status);
+                            }
+                            onSubmitVote(false);
+                        }
+                    }
+                };
+                xhttp.open("GET", "submit.php?s=" + currentSlot + "&i=" + input + "&u=" + userId, true);
+                xhttp.send();
+            } else {
+                console.log("Error submitting vote: no input");
+                onSubmitVote(false);
+            }
+        }
+
+        //
+        // Rendering
+        //
+
+        function updateStoryDisplay() {
+            var slots = document.getElementById("slots");
+
+            // reset the background color of the last selected slot
+            if (lastSlot != -1) {
+                document.getElementById("slot" + lastSlot).classList.remove('slot-selected');
+            }
+
+            // change the background color of the current slot to light green
+            if (currentSlot != -1) {
+                document.getElementById("slot" + currentSlot).classList.add('slot-selected');
+            }
+        }
+
+        function updateSlotInfo() {
+            if (currentSlot == -1) {
+                return;
+            }
+
+            document.getElementById('slot-info-status').innerHTML =
+                stats.slots[currentSlot].submissions + " / " + stats.slots[currentSlot].votes + " / " +
+                (submissions.hasOwnProperty(currentSlot) ? submissions[currentSlot].input : "");
+
+            var topWords = document.getElementById("slotInfoTopWords");
+            var widthMax = document.getElementById("slotInfoTopWords").parentElement.clientWidth;
+            var widthMin = 42;
+
+            topWords.innerHTML = "";
+
+            var slot = stats.slots[currentSlot];
+            if (slot.top.length > 0) {
+                // determine max votes
+                var maxVotes = 0;
+                for (var i = 0; i < slot.top.length; i++) {
+                    if (slot.top[i].votes > maxVotes) {
+                        maxVotes = slot.top[i].votes;
+                    }
+                }
+
+                // for each top word, add a row to the table with 3 columns
+                for (var i = 0; i < slot.top.length; i++) {
+                    var cur = slot.top[i];
+                    var row = document.createElement("tr");
+                    var cellWord = document.createElement("td");
+                    var cellVotes = document.createElement("td");
+
+                    cellWord.innerHTML = '<button class="button-slot-info-top-submission" onClick="setSlotInfoInput(\'' + cur.word + '\')">' + cur.word + '</button>';
+                    cellVotes.innerHTML = "";
+
+                    cellWord.style.width = "50%";
+                    cellWord.style.textAlign = "left";
+
+                    cellVotes.style.textAlign = "right";
+
+                    var bar = document.createElement("div");
+                    bar.classList.add('slot-info-slot-info-top-submission-bar');
+                    bar.style.width = (widthMin + parseInt(0.5*(widthMax - widthMin)*(cur.votes/maxVotes))) + "px";
+                    bar.innerHTML = (0.001*cur.votes).toFixed(3);
+
+                    cellVotes.appendChild(bar);
+
+                    row.appendChild(cellVotes);
+                    row.appendChild(cellWord);
+
+                    topWords.appendChild(row);
+                }
+            }
+        }
+
+        function updateSettings() {
+            document.getElementById('settings-slots').innerHTML = stats.slots.length;
+            document.getElementById('settings-submitted-total').innerHTML = stats.submissions;
+            document.getElementById('settings-votes-total').innerHTML = stats.votes;
+            document.getElementById('settings-votes-needed').innerHTML = stats.next - stats.votes;
+
+            // date time string
+            var d = new Date(getTimestamp());
+            document.getElementById('settings-last-update').innerHTML = d.toLocaleString();
+        }
+
+        function init() {
+            document.onkeydown = function(e) {
+                e = e || window.event;
+
+                // check if input box is focused
+                if (document.getElementById('slot-info-input').isEqualNode(document.activeElement)) {
+                    if (e.keyCode == 27) {
+                        document.getElementById('slot-info-input').blur();
+                    }
+
+                    if (e.keyCode == 13) {
+                        submitVote();
+                    }
+
+                    return;
+                } else {
+                    // if slot info modal is open and the pressed key is a letter, backspace or delete -  focus the input box
+                    if (document.getElementById('modalSlotInfo').style.display == "block") {
+                        if ((e.keyCode >= 65 && e.keyCode <= 90) || e.keyCode == 8 || e.keyCode == 46) {
+                            document.getElementById('slot-info-input').focus();
+                        }
+                    }
+                }
+
+                if (e.keyCode == '37') gotoPrevious();
+                if (e.keyCode == '39') gotoNext();
+                if (e.keyCode == '36') gotoFirst();
+                if (e.keyCode == '35') gotoLast();
+                if (e.keyCode == '27') closeModals();
+                if (e.keyCode == '13') toggleSlotInfo();
+                if (e.keyCode == '32') toggleSlotInfo();
+            };
+
+            window.addEventListener('touchend', closeModals, true);
+            window.addEventListener('mouseup',  closeModals, true);
+
+            document.getElementById('nav-goto-previous').ontouchstart = function() { gotoPrevious(); onMouseDown = setInterval(function() { gotoPrevious(); }, 200); };
+            document.getElementById('nav-goto-previous').onmousedown  = function() { gotoPrevious(); onMouseDown = setInterval(function() { gotoPrevious(); }, 200); };
+
+            document.getElementById('nav-goto-next').ontouchstart = function() { gotoNext(); onMouseDown = setInterval(function() { gotoNext(); }, 200); };
+            document.getElementById('nav-goto-next').onmousedown  = function() { gotoNext(); onMouseDown = setInterval(function() { gotoNext(); }, 200); };
+
+            // check if localStorage contains a map 'submissions'
+            if (localStorage.submissions == undefined) {
+                console.log('Initialize localStorage.submissions map');
+                localStorage.submissions = JSON.stringify({});
+            }
+
+            submissions = JSON.parse(localStorage.submissions);
+            // remove all submissions that are older than one day
+            for (var slot in submissions) {
+                var changed = false;
+
+                if (getDaysSinceEpoch(submissions[slot].timestamp) < getDaysSinceEpoch()) {
+                    console.log('Removing old submission for slot ' + slot);
+                    delete submissions[slot];
+                    changed = true;
+                }
+
+                if (changed) {
+                    localStorage.submissions = JSON.stringify(submissions);
+                }
+            }
+
+            // load text justification from local storage
+            if (localStorage.getItem("textJustification") != null) {
+                changeJustification(localStorage.getItem("textJustification"));
+            } else {
+                changeJustification(ETextJustification.LEFT);
+            }
+
+            if (localStorage.getItem("userId") != null) {
+                userId = localStorage.getItem("userId");
+                console.log("userId: " + userId);
+            } else {
+                userId = generateUserId();
+                console.log("generated userId: " + userId);
+
+                localStorage.setItem("userId", userId);
+            }
+
+            if (localStorage.getItem('nSubmitted') != null) {
+                nSubmitted = parseInt(localStorage.getItem('nSubmitted'));
+            } else {
+                nSubmitted = 0;
+                localStorage.setItem('nSubmitted', nSubmitted);
+            }
+
+            document.getElementById('settings-user-id').innerHTML = userId;
+            document.getElementById('settings-submitted').innerHTML = nSubmitted;
+
+            update();
+
+            // update stats every 17 seconds
+            setInterval(update, 17000);
+        }
+
+        //
+        // WIP
+        //
+
+        // sample histogram data
+        var dataY = [ 10, 40, 30, 25, 70, 45 ];
+
+        // plot a simple histogram using javascript canvas
+        function plotHistogram(id, dataY, minY, maxY, bgColor, fgColor, gridLineColor, gridLineColor2) {
+            var canvas = document.getElementById(id);
+            var ctx = canvas.getContext("2d");
+
+            var width = canvas.getBoundingClientRect().width || canvas.width;
+            var height = canvas.getBoundingClientRect().height || canvas.height;
+
+            canvas.setAttribute('width', width);
+            canvas.setAttribute('height', height);
+
+            console.log("plotting histogram with width: " + width + " and height: " + height);
+
+            // clear the canvas
+            ctx.clearRect(0, 0, width, height);
+
+            // draw the background
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, width, height);
+
+            // draw the grid lines
+            ctx.strokeStyle = gridLineColor;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(width, 0);
+            ctx.lineTo(width, height);
+            ctx.lineTo(0, height);
+            ctx.lineTo(0, 0);
+            ctx.stroke();
+
+            // 5 horizontal grid lines with half opacity
+            for (var i = 0; i < 5; i++) {
+                ctx.strokeStyle = gridLineColor2;
+                ctx.beginPath();
+                ctx.moveTo(0, height * (i + 1) / 5);
+                ctx.lineTo(width, height * (i + 1) / 5);
+                ctx.stroke();
+            }
+
+            // 5 vertical grid lines with half opacity
+            for (var i = 0; i < 5; i++) {
+                ctx.strokeStyle = gridLineColor2;
+                ctx.beginPath();
+                ctx.moveTo(width * (i + 1) / 5, 0);
+                ctx.lineTo(width * (i + 1) / 5, height);
+                ctx.stroke();
+            }
+
+            // draw the bars
+            ctx.fillStyle = fgColor;
+            for (var i = 0; i < dataY.length; i++) {
+                var barHeight = height * dataY[i] / maxY;
+                var barWidth = width / dataY.length;
+                var barX = i * barWidth;
+                var barY = height - barHeight;
+                ctx.fillRect(barX, barY, barWidth, barHeight);
+            }
+
+            // draw the labels
+            ctx.fillStyle = "black";
+            ctx.font = "bold 12px Arial";
+            for (var i = 0; i < dataY.length; i++) {
+                var barHeight = height * dataY[i] / maxY;
+                var barWidth = width / dataY.length;
+                var barX = i * barWidth;
+                var barY = height - barHeight;
+                ctx.fillText(dataY[i], barX + barWidth / 2, barY - 5);
+            }
+        }
+    </script>
+</body>
